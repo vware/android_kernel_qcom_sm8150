@@ -3662,7 +3662,6 @@ static int aw8697_i2c_reads(struct aw8697 *aw8697,
 static void aw8697_rtp_loaded(const struct firmware *cont, void *context)
 {
     struct aw8697 *aw8697 = context;
-    int ret = 0;
     pr_info("%s enter\n", __func__);
 
     if (!cont) {

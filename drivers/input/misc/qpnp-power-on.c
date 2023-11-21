@@ -34,6 +34,7 @@
 #include <linux/regulator/of_regulator.h>
 #include <linux/qpnp/qpnp-pbs.h>
 #include <linux/qpnp/qpnp-misc.h>
+#include <linux/input/qpnp-power-on.h>
 
 #define PMIC_VER_8941				0x01
 #define PMIC_VERSION_REG			0x0105
@@ -201,6 +202,7 @@ struct pon_regulator {
 	bool			enabled;
 };
 
+#ifndef CONFIG_OPLUS_FEATURE_QCOM_PMICWD
 struct qpnp_pon {
 	struct device		*dev;
 	struct regmap		*regmap;
@@ -244,13 +246,16 @@ struct qpnp_pon {
 	struct notifier_block	pon_nb;
 	bool			legacy_hard_reset_offset;
 };
+#endif //OPLUS_FEATURE_QCOM_PMICWD
 
 static int pon_ship_mode_en;
 module_param_named(
 	ship_mode_en, pon_ship_mode_en, int, 0600
 );
 
+#ifndef CONFIG_OPLUS_FEATURE_QCOM_PMICWD
 static struct qpnp_pon *sys_reset_dev;
+#endif //OPLUS_FEATURE_QCOM_PMICWD
 static DEFINE_SPINLOCK(spon_list_slock);
 static LIST_HEAD(spon_dev_list);
 
@@ -356,8 +361,12 @@ done:
 	return rc;
 }
 
+#ifdef CONFIG_OPLUS_FEATURE_QCOM_PMICWD
+int qpnp_pon_masked_write(struct qpnp_pon *pon, u16 addr, u8 mask, u8 val)
+#else
 static int
 qpnp_pon_masked_write(struct qpnp_pon *pon, u16 addr, u8 mask, u8 val)
+#endif /* OPLUS_FEATURE_QCOM_PMICWD */
 {
 	int rc;
 

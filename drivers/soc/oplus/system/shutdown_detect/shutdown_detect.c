@@ -209,10 +209,8 @@ static ssize_t shutdown_detect_trigger(struct file *filp, const char *ubuf, size
         gnativetimeout += SHUTDOWN_INCREASE_TIME;
         gjavatimeout += SHUTDOWN_INCREASE_TIME;
     }
-#ifdef OPLUS_BUG_STABILITY
     tsk = current->group_leader;
     pr_info("%s:%d shutdown_detect, GroupLeader is %s:%d\n", current->comm, task_pid_nr(current), tsk->comm, task_pid_nr(tsk));
-#endif /*OPLUS_BUG_STABILITY*/
     //val: 0x gtotaltimeout|gjavatimeout|gnativetimeout , gnativetimeout < F, gjavatimeout < F
     if (val > SHUTDOWN_RUS_MIN) {
          gnativetimeout = val % 16;

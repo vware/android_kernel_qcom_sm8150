@@ -27,18 +27,7 @@ enum{
 };
 
 extern int get_boot_mode(void);
-#ifdef VENDOR_EDIT
 extern bool qpnp_is_power_off_charging(void);
-#endif
-#ifdef VENDOR_EDIT
 extern bool qpnp_is_charger_reboot(void);
-#endif /*VENDOR_EDIT*/
 
 #endif  /*_OPLUS_BOOT_H*/
-
-#ifdef VENDOR_EDIT
-#ifdef PHOENIX_PROJECT
-extern bool op_is_monitorable_boot(void);
-#endif
-#endif
-

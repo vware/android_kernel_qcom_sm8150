@@ -46,7 +46,6 @@
 #define DISPCAP_LOGD(...)
 #define DISPCAP_LOGE pr_err
 
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 bool setCaptureRect(int left, int top, int width, int height)
 {
 	return false;
@@ -63,13 +62,6 @@ bool setUserBuffer(u8 *user_buffer)
 {
 	return false;
 }
-#else // #ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-// import from display driver
-extern bool setCaptureRect(int left, int top, int width, int height);
-extern bool setCaptureInterval(int interval);
-extern bool enableCapture(int en);
-extern bool setUserBuffer(u8 *user_buffer);
-#endif // #ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 
 // import from ion driver
 typedef void (*fp_buffer_complete_notify)(void *user_buffer);
@@ -340,94 +332,11 @@ static struct file_operations io_dev_fops = {
 
 int __init dispcap_dev_init(void)
 {
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 	return 0;
-#else
-	int err = 0;
-
-	DISPCAP_LOGD("start\n");
-
-	g_disp_driver.dev_class = NULL;
-	g_disp_driver.device = NULL;
-	g_disp_driver.dev_class = NULL;
-	g_disp_driver.ion_client = NULL;
-	g_disp_driver.dispcap_used = false;
-	mutex_init(&g_disp_driver.dispcap_lock);
-
-	err = alloc_chrdev_region(&g_disp_driver.dev, 0, 1, "midas_dispcap");
-	if (err < 0) {
-		DISPCAP_LOGE("failed to alloc chrdev\n");
-		goto fail;
-	}
-
-	cdev_init(&g_disp_driver.cdev, &io_dev_fops);
-
-	err = cdev_add(&g_disp_driver.cdev, g_disp_driver.dev, 1);
-	if (err < 0) {
-		DISPCAP_LOGE("cdev_add g_disp_driver.cdev failed!\n");
-		goto unreg_region;
-	}
-
-	g_disp_driver.dev_class = class_create(THIS_MODULE, "midas_dispcap_class");
-	if (IS_ERR(g_disp_driver.dev_class)) {
-		DISPCAP_LOGE("create class g_disp_driver.dev_class error\n");
-		goto destroy_cdev;
-	}
-
-	g_disp_driver.device = device_create(g_disp_driver.dev_class, NULL, g_disp_driver.dev, NULL, "midas_dispcap");
-	if (IS_ERR(g_disp_driver.device)) {
-		DISPCAP_LOGE("device_create g_disp_driver.device error\n");
-		goto destroy_class;
-	}
-
-	g_disp_driver.ion_client = ion_client_create(g_ion_device, "dispcap_ion_client");
-	if (NULL == g_disp_driver.ion_client) {
-		DISPCAP_LOGE("ion_client_create g_disp_driver.ion_client failed\n");
-		goto destroy_device;
-	}
-
-	init_completion(&g_disp_driver.dispcap_cmp);
-
-	return 0;
-
-destroy_device:
-	device_destroy(g_disp_driver.dev_class, g_disp_driver.dev);
-
-destroy_class:
-	class_destroy(g_disp_driver.dev_class);
-
-destroy_cdev:
-    cdev_del(&g_disp_driver.cdev);
-
-unreg_region:
-	unregister_chrdev_region(g_disp_driver.dev, 1);
-
-fail:
-    return -1;
-#endif
 }
 
 void __exit dispcap_dev_exit(void)
 {
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-#else
-	DISPCAP_LOGD("start\n");
-
-	if (NULL != g_disp_driver.ion_client) {
-		ion_client_destroy(g_disp_driver.ion_client);
-		g_disp_driver.ion_client = NULL;
-	}
-
-	if (g_disp_driver.dev_class) {
-		device_destroy(g_disp_driver.dev_class, g_disp_driver.dev);
-		class_destroy(g_disp_driver.dev_class);
-		g_disp_driver.dev_class = NULL;
-    }
-
-    cdev_del(&g_disp_driver.cdev);
-
-    unregister_chrdev_region(g_disp_driver.dev, 1);
-#endif
 }
 
 #else // #ifdef OPLUS_FEATURE_MIDAS

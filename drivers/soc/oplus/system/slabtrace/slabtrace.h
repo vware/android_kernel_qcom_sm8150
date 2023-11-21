@@ -28,7 +28,6 @@
 #include <trace/events/kmem.h>
 #include <linux/version.h>
 
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
 #include <../../../../mm/internal.h>
 #include <../../../../mm/slab.h>
@@ -36,10 +35,6 @@
 #include <../../../../mm/internal.h>
 #include <../../../../mm/slab.h>
 #endif //(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
-#else
-#include <../../../../../kernel-4.19/mm/slab.h>
-#include <../../../../../kernel-4.19/mm/internal.h>
-#endif
 
 #if defined(CONFIG_OPLUS_FEATURE_SLABTRACE_DEBUG)
 #ifndef CONFIG_RANDOMIZE_BASE

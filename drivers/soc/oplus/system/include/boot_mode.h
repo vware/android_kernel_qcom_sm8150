@@ -43,4 +43,3 @@ extern bool qpnp_is_charger_reboot(void);
 extern bool op_is_monitorable_boot(void);
 #endif
 #endif
-

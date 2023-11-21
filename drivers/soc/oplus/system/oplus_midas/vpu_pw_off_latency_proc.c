@@ -27,15 +27,10 @@
 
 #ifdef OPLUS_FEATURE_MIDAS
 
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 int set_all_vpu_power_off_latency(uint64_t pw_off_latency)
 {
 	return -1;
 }
-#else
-// import from MTK vpu driver
-extern int set_all_vpu_power_off_latency(uint64_t pw_off_latency);
-#endif
 
 #define BUF_LEN		1024
 
@@ -82,24 +77,12 @@ static const struct file_operations vpu_pw_off_latency_proc_fops = {
 
 int __init vpu_pw_off_latency_proc_init(void)
 {
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-#else
-	g_vpu_pw_off_latency_pentry = proc_create("all_vpu_pw_off_latency",
-				0666, NULL, &vpu_pw_off_latency_proc_fops);
-#endif
 	return 0;
 }
 
 
 void __exit vpu_pw_off_latency_proc_exit(void)
 {
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-#else
-	if (NULL != g_vpu_pw_off_latency_pentry) {
-		proc_remove(g_vpu_pw_off_latency_pentry);
-		g_vpu_pw_off_latency_pentry = NULL;
-	}
-#endif
 }
 
 #else // #ifdef OPLUS_FEATURE_MIDAS

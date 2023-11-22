@@ -437,6 +437,12 @@ struct sde_crtc_state {
 	u32 padding_dummy;
 
 	struct sde_crtc_respool rp;
+#ifdef OPLUS_BUG_STABILITY
+	bool fingerprint_mode;
+	bool fingerprint_pressed;
+	bool fingerprint_defer_sync;
+	struct sde_hw_dim_layer *fingerprint_dim_layer;
+#endif /* OPLUS_BUG_STABILITY */
 };
 
 enum sde_crtc_irq_state {
@@ -850,6 +856,10 @@ int sde_crtc_calc_vpadding_param(struct drm_crtc_state *state,
 		uint32_t crtc_y, uint32_t crtc_h, uint32_t *padding_y,
 		uint32_t *padding_start, uint32_t *padding_height);
 
+#ifdef OPLUS_BUG_STABILITY
+struct sde_kms *_sde_crtc_get_kms_(struct drm_crtc *crtc);
+#endif /* OPLUS_BUG_STABILITY */
+
 /**
  * sde_crtc_get_num_datapath - get the number of datapath active
  *				of primary connector
@@ -859,9 +869,4 @@ int sde_crtc_calc_vpadding_param(struct drm_crtc_state *state,
 int sde_crtc_get_num_datapath(struct drm_crtc *crtc,
 		struct drm_connector *connector);
 
-/**
- * _sde_crtc_clear_dim_layers_v1 - clear all dim layer settings
- * @cstate:      Pointer to drm crtc state
- */
-void _sde_crtc_clear_dim_layers_v1(struct drm_crtc_state *state);
 #endif /* _SDE_CRTC_H_ */

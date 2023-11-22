@@ -18,6 +18,7 @@
 #include "sde_hw_pingpong.h"
 #include "sde_dbg.h"
 #include "sde_kms.h"
+#include "../oplus/oplus_dsi_support.h"
 
 #define PP_TEAR_CHECK_EN                0x000
 #define PP_SYNC_CONFIG_VSYNC            0x004
@@ -163,11 +164,14 @@ static struct sde_pingpong_cfg *_pingpong_offset(enum sde_pingpong pp,
 	return ERR_PTR(-EINVAL);
 }
 
+extern int oplus_request_power_status;
+
 static int sde_hw_pp_setup_te_config(struct sde_hw_pingpong *pp,
 		struct sde_hw_tear_check *te)
 {
 	struct sde_hw_blk_reg_map *c;
 	int cfg;
+	int temp_vclks_line;
 
 	if (!pp || !te)
 		return -EINVAL;
@@ -177,7 +181,11 @@ static int sde_hw_pp_setup_te_config(struct sde_hw_pingpong *pp,
 	if (te->hw_vsync_mode)
 		cfg |= BIT(20);
 
-	cfg |= te->vsync_count;
+	temp_vclks_line = te->vsync_count;
+	if((oplus_request_power_status == OPLUS_DISPLAY_POWER_DOZE) || (oplus_request_power_status == OPLUS_DISPLAY_POWER_DOZE_SUSPEND)) {
+		temp_vclks_line = temp_vclks_line * 60 * 100 / 3000;
+	}
+	cfg |= temp_vclks_line;
 
 	SDE_REG_WRITE(c, PP_SYNC_CONFIG_VSYNC, cfg);
 	SDE_REG_WRITE(c, PP_SYNC_CONFIG_HEIGHT, te->sync_cfg_height);

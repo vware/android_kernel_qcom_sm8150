@@ -389,7 +389,6 @@ int oplus_display_panel_get_serial_number(void *buf)
 	return 0;
 }
 
-#ifdef OPLUS_BUG_STABILITY
 int oplus_display_get_panel_parameters(struct dsi_panel *panel,
 	struct dsi_parser_utils *utils)
 {
@@ -435,7 +434,7 @@ int oplus_display_update_aod_area_unlock(void)
 	int rc = 0;
 	int i;
 
-	if (!display || !display->panel || !display->panel->oplus_priv.is_aod_ramless)
+	if (!display || !display->panel)
 		return 0;
 
 	if (!dsi_panel_initialized(display->panel))
@@ -523,7 +522,7 @@ int oplus_display_set_aod_area(void *buf)
 	struct panel_aod_area_para *para = (struct panel_aod_area_para *)buf;
 	int i, cnt = 0;
 	struct dsi_display *display = get_main_display();
-	if (!display || !display->panel || !display->panel->oplus_priv.is_aod_ramless)
+	if (!display || !display->panel)
 		return -EINVAL;
 
 	memset(oplus_aod_area, 0, sizeof(struct aod_area) * RAMLESS_AOD_AREA_NUM);
@@ -804,5 +803,3 @@ error:
 
 	return 0;
 }
-
-#endif /* OPLUS_BUG_STABILITY */

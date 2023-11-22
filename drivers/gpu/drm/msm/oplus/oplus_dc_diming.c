@@ -320,9 +320,7 @@ done:
 	return 0;
 }
 
-#ifdef OPLUS_BUG_STABILITY
 extern u32 flag_writ;
-#endif /*OPLUS_BUG_STABILITY*/
 
 int sde_connector_update_hbm(struct drm_connector *connector)
 {

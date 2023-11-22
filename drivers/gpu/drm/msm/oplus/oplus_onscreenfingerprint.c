@@ -395,7 +395,6 @@ int dsi_panel_parse_oplus_config(struct dsi_panel *panel)
 	DSI_INFO("aod ramless mode: %s", panel->oplus_priv.is_aod_ramless ? "true" : "false");
 #endif /* OPLUS_FEATURE_AOD_RAMLESS */
 
-#ifdef OPLUS_BUG_STABILITY
 	panel->oplus_priv.is_19781_lcd = utils->read_bool(utils->data,
 			"oplus,is_19781_lcd");
 	DSI_INFO("is_19781_lcd: %s",
@@ -412,7 +411,6 @@ int dsi_panel_parse_oplus_config(struct dsi_panel *panel)
 		panel->oplus_priv.prj_flag = !rc ? val : 0;
 		DSI_INFO("oplus_prj_flag = %d\n", panel->oplus_priv.prj_flag);
 	}
-#endif /* OPLUS_BUG_STABILITY */
 
 	return 0;
 }

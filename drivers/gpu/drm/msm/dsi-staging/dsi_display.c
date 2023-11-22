@@ -32,6 +32,29 @@
 #include "sde_dbg.h"
 #include "dsi_parser.h"
 #include "dsi_phy.h"
+#include "../oplus/oplus_display_panel_seed.h"
+#include "../oplus/oplus_mm_kevent_fb.h"
+#include <linux/msm_drm_notify.h>
+#include <linux/notifier.h>
+#include "../oplus/oplus_display_private_api.h"
+#include "../oplus/oplus_ffl.h"
+#include <soc/oplus/boot_mode.h>
+
+extern int msm_drm_notifier_call_chain(unsigned long val, void *v);
+/* Don't panic if smmu fault*/
+extern int sde_kms_set_smmu_no_fatal_faults(struct drm_device *drm);
+
+__attribute__((weak)) void sec_refresh_switch(int fps)
+{
+    return;
+}
+
+#ifdef OPLUS_FEATURE_TP_BASIC
+__attribute__((weak)) void lcd_tp_refresh_switch(int fps)
+{
+    return;
+}
+#endif /* OPLUS_FEATURE_TP_BASIC*/
 
 #define to_dsi_display(x) container_of(x, struct dsi_display, host)
 #define INT_BASE_10 10
@@ -44,6 +67,9 @@
 
 #define DSI_CLOCK_BITRATE_RADIX 10
 #define MAX_TE_SOURCE_ID  2
+
+static struct dsi_display *primary_display;
+static struct dsi_display *secondary_display;
 
 DEFINE_MUTEX(dsi_display_clk_mutex);
 
@@ -184,6 +210,27 @@ void dsi_rect_intersect(const struct dsi_rect *r1,
 	}
 }
 
+int power_change_update_backlight = 0;
+extern u32 flag_writ;
+
+bool  cmp_display_panel_name(const char* istr) {
+        bool ret = false;
+        struct dsi_display *display = get_main_display();
+
+        if(!display || !display->panel)
+                return ret;
+
+        if(!strcmp(display->panel->oplus_priv.vendor_name, istr)) {
+                ret = true;
+        }
+
+        return ret;
+}
+EXPORT_SYMBOL(cmp_display_panel_name);
+
+extern int seed_mode;
+extern int fod_dimlayer_flag;
+
 int dsi_display_set_backlight(struct drm_connector *connector,
 		void *display, u32 bl_lvl)
 {
@@ -241,7 +288,7 @@ error:
 	return rc;
 }
 
-static int dsi_display_cmd_engine_enable(struct dsi_display *display)
+int dsi_display_cmd_engine_enable(struct dsi_display *display)
 {
 	int rc = 0;
 	int i;
@@ -285,7 +332,7 @@ done:
 	return rc;
 }
 
-static int dsi_display_cmd_engine_disable(struct dsi_display *display)
+int dsi_display_cmd_engine_disable(struct dsi_display *display)
 {
 	int rc = 0;
 	int i;
@@ -419,6 +466,12 @@ static void dsi_display_change_te_irq_status(struct dsi_display *display,
 	}
 }
 
+void oplus_dsi_display_change_te_irq_status(void *disp, bool enable)
+{
+	struct dsi_display *display = disp;
+	dsi_display_change_te_irq_status(display, enable);
+}
+
 static void dsi_display_register_te_irq(struct dsi_display *display)
 {
 	int rc = 0;
@@ -471,7 +524,7 @@ error:
 }
 
 /* Allocate memory for cmd dma tx buffer */
-static int dsi_host_alloc_cmd_tx_buffer(struct dsi_display *display)
+int dsi_host_alloc_cmd_tx_buffer(struct dsi_display *display)
 {
 	int rc = 0, cnt = 0;
 	struct dsi_display_ctrl *display_ctrl;
@@ -5493,6 +5546,11 @@ int dsi_display_dev_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, display);
 
+	if (!strcmp(dsi_type, "primary"))
+			primary_display = display;
+		else
+			secondary_display = display;
+
 	rc = dsi_display_init(display);
 	if (rc)
 		goto end;
@@ -6542,6 +6600,9 @@ static inline bool dsi_display_mode_switch_dfps(struct dsi_display_mode *cur,
  *               is change in clk but vactive and hactive are same.
  * Return: error code.
  */
+u32 mode_fps = 0;
+EXPORT_SYMBOL(mode_fps);
+
 int dsi_display_validate_mode_change(struct dsi_display *display,
 			struct dsi_display_mode *cur_mode,
 			struct dsi_display_mode *adj_mode)
@@ -6709,6 +6770,12 @@ int dsi_display_set_mode(struct dsi_display *display,
 			goto error;
 		}
 	}
+
+	sec_refresh_switch(adj_mode.timing.refresh_rate);
+
+#ifdef OPLUS_FEATURE_TP_BASIC
+        lcd_tp_refresh_switch(adj_mode.timing.refresh_rate);
+#endif /* OPLUS_FEATURE_TP_BASIC*/
 
 	memcpy(display->panel->cur_mode, &adj_mode, sizeof(adj_mode));
 error:
@@ -7668,6 +7735,8 @@ int dsi_display_pre_disable(struct dsi_display *display)
 int dsi_display_disable(struct dsi_display *display)
 {
 	int rc = 0;
+	int blank;
+	struct msm_drm_notifier notifier_data;
 
 	if (!display) {
 		pr_err("Invalid params\n");
@@ -7698,6 +7767,12 @@ int dsi_display_disable(struct dsi_display *display)
 	}
 
 	if (!display->poms_pending) {
+		blank = MSM_DRM_BLANK_POWERDOWN;
+		notifier_data.data = &blank;
+		notifier_data.id = 0;
+		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK,
+							&notifier_data);
+
 		rc = dsi_panel_disable(display->panel);
 		if (rc)
 			pr_err("[%s] failed to disable DSI panel, rc=%d\n",
@@ -7799,6 +7874,11 @@ int dsi_display_unprepare(struct dsi_display *display)
 	SDE_EVT32(SDE_EVTLOG_FUNC_EXIT);
 	return rc;
 }
+
+struct dsi_display *get_main_display(void) {
+		return primary_display;
+}
+EXPORT_SYMBOL(get_main_display);
 
 static int __init dsi_display_register(void)
 {

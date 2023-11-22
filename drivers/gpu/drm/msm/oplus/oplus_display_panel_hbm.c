@@ -267,7 +267,6 @@ int oplus_display_panel_get_hbm(void *buf)
 	return 0;
 }
 
-#ifdef OPLUS_BUG_STABILITY
 /*Add for solve backlight issue for hbm*/
 int oplus_dsi_hbm_backlight_setting(bool enabled)
 {
@@ -291,4 +290,3 @@ int oplus_dsi_hbm_backlight_setting(bool enabled)
 	}
 	return ret;
 }
-#endif /*OPLUS_BUG_STABILITY*/

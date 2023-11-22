@@ -152,4 +152,7 @@ void sde_cp_crtc_post_ipc(struct drm_crtc *crtc);
  */
 int sde_cp_hist_interrupt(struct drm_crtc *crtc_drm, bool en,
 	struct sde_irq_callback *hist_irq);
+
+struct sde_kms *get_kms_(struct drm_crtc *crtc);
+
 #endif /*_SDE_COLOR_PROCESSING_H */

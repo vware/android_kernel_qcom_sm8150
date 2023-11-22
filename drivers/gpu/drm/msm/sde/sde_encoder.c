@@ -4285,8 +4285,7 @@ static void _sde_encoder_setup_dither(struct sde_encoder_phys *phys)
 	}
 
 	ret = sde_connector_get_dither_cfg(phys->connector,
-			phys->connector->state, &dither_cfg,
-			&len, sde_enc->idle_pc_restore);
+			phys->connector->state, &dither_cfg, &len);
 	if (ret)
 		return;
 

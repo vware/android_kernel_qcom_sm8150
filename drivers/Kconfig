@@ -104,7 +104,6 @@ source "drivers/hid/Kconfig"
 source "drivers/usb/Kconfig"
 
 source "drivers/uwb/Kconfig"
-
 source "drivers/mmc/Kconfig"
 
 source "drivers/memstick/Kconfig"
@@ -225,4 +224,4 @@ source "drivers/sensors/Kconfig"
 
 source "drivers/esoc/Kconfig"
 
-endmenu
+source "drivers/infrared_proximity/Kconfig"

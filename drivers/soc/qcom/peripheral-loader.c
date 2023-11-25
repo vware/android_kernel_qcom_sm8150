@@ -44,6 +44,10 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/trace_msm_pil_event.h>
 
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#include <soc/oplus/system/oplus_mm_kevent_fb.h>
+#endif /* CONFIG_OPLUS_FEATURE_MM_FEEDBACK */
+
 #include "peripheral-loader.h"
 
 #define pil_err(desc, fmt, ...)						\
@@ -473,6 +477,26 @@ static void print_aux_minidump_tocs(struct pil_desc *desc)
 }
 #endif
 
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#define CAUSENAME_SIZE 128
+unsigned int BKDRHash(char* str, unsigned int len)
+{
+	unsigned int seed = 131; /* 31 131 1313 13131 131313 etc.. */
+	unsigned int hash = 0;
+	unsigned int i    = 0;
+
+	if (str == NULL) {
+		return 0;
+	}
+
+	for(i = 0; i < len; str++, i++) {
+		hash = (hash * seed) + (*str);
+	}
+
+	return hash;
+}
+#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
+
 /**
  * pil_do_ramdump() - Ramdump an image
  * @desc: descriptor from pil_desc_init()
@@ -488,6 +512,12 @@ int pil_do_ramdump(struct pil_desc *desc,
 	struct pil_priv *priv = desc->priv;
 	struct pil_seg *seg;
 	int count = 0, ret;
+
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+	unsigned char payload[100] = "";
+	unsigned int hashid;
+	char strHashSource[CAUSENAME_SIZE];
+#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
 
 #ifdef CONFIG_QCOM_MINIDUMP
 	if (desc->minidump_ss) {

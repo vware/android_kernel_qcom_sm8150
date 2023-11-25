@@ -44,6 +44,9 @@
 #ifdef CONFIG_HIBERNATION
 #include <linux/notifier.h>
 #endif
+#ifdef OPLUS_BUG_STABILITY
+#include <soc/oplus/system/oplus_project.h>
+#endif
 
 #define MAX_NR_GPIO 300
 #define PS_HOLD_OFFSET 0x820
@@ -2085,6 +2088,31 @@ int msm_gpio_mpm_wake_set(unsigned int gpio, bool enable)
 }
 EXPORT_SYMBOL(msm_gpio_mpm_wake_set);
 
+static void msm_gpio_wakeup_init(struct msm_pinctrl *pctrl)
+{
+	struct device_node *gpio_wakeup;
+	uint32_t gpio_num = 0, i = 0;
+	uint32_t * gpio_table;
+	gpio_wakeup = of_find_compatible_node(pctrl->dev->of_node, NULL, "gpio_wakeup");
+	if (!gpio_wakeup) {
+		pr_err("Disable wakeup gpip function not confing\n");
+		return;
+	}
+	gpio_num = of_property_count_elems_of_size(gpio_wakeup, "gpio_table", sizeof(uint32_t));
+	if (gpio_num == -EINVAL){
+		pr_err("Have no wakeup gpio disable\n");
+		return;
+	}
+
+	gpio_table = (uint32_t *)kzalloc(sizeof(uint32_t)*gpio_num, GFP_KERNEL);
+	of_property_read_u32_array(gpio_wakeup, "gpio_table", gpio_table, gpio_num);
+
+	for(i=0; i<gpio_num; i++){
+		msm_gpio_mpm_wake_set(gpio_table[i], false);
+		pr_info("The wakeup function of GPIO_%d has been disabled!",gpio_table[i]);
+	}
+}
+
 int msm_pinctrl_probe(struct platform_device *pdev,
 		      const struct msm_pinctrl_soc_data *soc_data)
 {
@@ -2168,6 +2196,15 @@ int msm_pinctrl_probe(struct platform_device *pdev,
 		return ret;
 #endif
 	dev_dbg(&pdev->dev, "Probed Qualcomm pinctrl driver\n");
+#ifdef OPLUS_BUG_STABILITY
+	msm_gpio_wakeup_init(pctrl);
+	if((20261 == get_project()) || (20262 == get_project())){
+		dev_err(&pdev->dev, "NFC GPIO MPM wake up funtion disabled\n");
+		msm_gpio_mpm_wake_set(36, false);
+		msm_gpio_mpm_wake_set(37, false);
+		msm_gpio_mpm_wake_set(94, false);
+	}
+#endif
 
 	return 0;
 }

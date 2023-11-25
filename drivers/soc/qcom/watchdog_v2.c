@@ -56,9 +56,7 @@
 #define MAX_CPU_CTX_SIZE	2048
 
 static struct msm_watchdog_data *wdog_data;
-
 static int cpu_idle_pc_state[NR_CPUS];
-
 /*
  * user_pet_enable:
  *	Require userspace to write to a sysfs file every pet_time milliseconds.
@@ -402,6 +400,7 @@ static void ping_other_cpus(struct msm_watchdog_data *wdog_dd)
 	cpumask_clear(&wdog_dd->alive_mask);
 	/* Make sure alive mask is cleared and set in order */
 	smp_mb();
+
 	for_each_cpu(cpu, cpu_online_mask) {
 		if (!cpu_idle_pc_state[cpu] && !cpu_isolated(cpu)) {
 			wdog_dd->ping_start[cpu] = sched_clock();
